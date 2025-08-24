@@ -1,4 +1,4 @@
-package br.com.eventos.gerenciadoreventosbackend.model;
+package br.com.eventos.gerenciadoreventosbackend;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

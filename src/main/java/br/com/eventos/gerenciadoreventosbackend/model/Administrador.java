@@ -5,6 +5,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import lombok.Data;
+import jakarta.persistence.Column;
 
 @Entity
 @Data
@@ -15,6 +16,9 @@ public class Administrador {
     private Long id;
 
     private String nome;
+    
+    @Column(unique = true)
     private String email;
+
     private String senha;
 }
