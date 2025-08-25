@@ -6,45 +6,42 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.userdetails.UserDetails;
 
 import br.com.eventos.gerenciadoreventosbackend.model.Administrador;
 import br.com.eventos.gerenciadoreventosbackend.repository.AdministradorRepository;
+import br.com.eventos.gerenciadoreventosbackend.security.TokenService; // 1. Importe o TokenService
 
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/admin")
 public class AdministradorController {
 
-    // Injeta o repositório para interagir com o banco de dados
     @Autowired
     private AdministradorRepository repository;
 
-    /**
-     * Endpoint para cadastrar um novo administrador.
-     * Recebe os dados do administrador e salva no banco.
-     */
+    @Autowired // 2. Injete o TokenService
+    private TokenService tokenService;
+
     @PostMapping("/cadastrar")
     public Administrador cadastrar(@RequestBody Administrador administrador) {
         return repository.save(administrador);
     }
 
-    /**
-     * Endpoint para realizar o login do administrador.
-     * Recebe email e senha, verifica no banco e retorna sucesso ou falha.
-     */
     @PostMapping("/login")
-    public ResponseEntity<String> login(@RequestBody Administrador administrador) {
-        // Procura o administrador pelo email fornecido
-        Optional<Administrador> adminOptional = repository.findByEmail(administrador.getEmail());
+public ResponseEntity<String> login(@RequestBody Administrador dadosLogin) {
+    // Busca o usuário no banco. O repositório agora retorna UserDetails.
+    UserDetails user = repository.findByEmail(dadosLogin.getEmail());
 
-        // Verifica se o administrador foi encontrado E se a senha corresponde
-        if (adminOptional.isPresent() && adminOptional.get().getSenha().equals(administrador.getSenha())) {
-            // Retorna uma resposta de sucesso (Status 200 OK)
-            return ResponseEntity.ok("Login bem-sucedido!");
-        } else {
-            // Retorna uma resposta de não autorizado (Status 401) com uma mensagem de erro
-            return ResponseEntity.status(401).body("Email ou senha inválidos.");
-        }
+    // Verifica se o usuário foi encontrado E se a senha da requisição bate com a senha salva
+    if (user != null && dadosLogin.getSenha().equals(user.getPassword())) {
+        // Se tudo estiver certo, gera o token.
+        // Precisamos converter UserDetails de volta para Administrador.
+        String token = tokenService.gerarToken((Administrador) user);
+        return ResponseEntity.ok(token);
+    } else {
+        // Se não, retorna erro.
+        return ResponseEntity.status(401).body("Email ou senha inválidos.");
     }
+}
 }
